@@ -1,6 +1,6 @@
 # WashU GDG Delivery Robot Monorepo
 
-![alt text](https://github.com/jaximus808/delivery-gdg-platform//blob/main/assets/gdg_logo.jpg "Delivery Logo")
+![alt text](https://github.com/jaximus808/delivery-gdg-platform//blob/main/assets/gdg_logo.jpg)
 
 ---
 
