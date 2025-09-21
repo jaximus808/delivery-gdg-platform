@@ -6,17 +6,16 @@ import (
 	"log"
 	"net"
 
-	pb "grpc-demo/proto"
-
+	"github.com/jaximus808/delivery-gdg-platform/main/apps/authoritative/grpc-demo/proto"
 	"google.golang.org/grpc"
 )
 
 type server struct {
-	pb.UnimplementedHelloServiceServer
+	proto.UnimplementedHelloServiceServer
 }
 
-func (s *server) SayHello(ctx context.Context, req *pb.HelloRequest) (*pb.HelloResponse, error) {
-	return &pb.HelloResponse{
+func (s *server) SayHello(ctx context.Context, req *proto.HelloRequest) (*proto.HelloResponse, error) {
+	return &proto.HelloResponse{
 		Message: fmt.Sprintf("Hello, %s!", req.GetName()),
 	}, nil
 }
@@ -28,7 +27,7 @@ func main() {
 	}
 
 	s := grpc.NewServer()
-	pb.RegisterHelloServiceServer(s, &server{})
+	proto.RegisterHelloServiceServer(s, &server{})
 
 	log.Println("gRPC server listening on :50051")
 	if err := s.Serve(lis); err != nil {
