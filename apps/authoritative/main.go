@@ -20,6 +20,10 @@ func (s *server) SayHello(ctx context.Context, req *proto.HelloRequest) (*proto.
 	}, nil
 }
 
+func add(x int, y int) int {
+	return x + y
+}
+
 func main() {
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
