@@ -1,12 +1,13 @@
 package main
 
+// Entry point for author server
 import (
 	"context"
 	"fmt"
 	"log"
 	"net"
 
-	"github.com/jaximus808/delivery-gdg-platform/main/apps/authoritative/grpc-demo/proto"
+	"github.com/jaximus808/delivery-gdg-platform/main/apps/authoritative/example/proto"
 	"google.golang.org/grpc"
 )
 
