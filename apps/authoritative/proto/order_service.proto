@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package order_service;
+
+option go_package = "/proto;order_service";
+
+//----------SERVICE-----
+service OrderHandler {
+    rpc PlaceOrder(Order) returns (PlaceOrderResponse);
+}
+
+//----------messages----------
+
+//order has order_id, vendor, item (list of items?)
+message Order {
+    int32 order_id = 1;
+    string vendor_name = 2;
+    string customer_name = 3;
+    string item = 4;
+}
+
+message PlaceOrderResponse {
+    int32 order_id = 1;
+    string message = 2;
+}
+
