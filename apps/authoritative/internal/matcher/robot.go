@@ -8,11 +8,11 @@ import (
 
 type RobotUpdate struct {
 	status  string
-	robotId int
+	robotID int
 }
 
 type RobotItem struct {
-	robotId int
+	robotID int
 }
 
 type RobotQueue struct {
@@ -32,13 +32,13 @@ func (q *RobotQueue) Len() int {
 }
 
 func (q *RobotQueue) Enqueue(r RobotItem) error {
-	_, exists := q.pos[r.robotId]
+	_, exists := q.pos[r.robotID]
 
 	if exists {
-		return fmt.Errorf("robot Id already queued %d", r.robotId)
+		return fmt.Errorf("robot Id already queued %d", r.robotID)
 	}
 	el := q.queue.PushBack(r)
-	q.pos[r.robotId] = el
+	q.pos[r.robotID] = el
 	return nil
 }
 
@@ -61,7 +61,7 @@ func (q *RobotQueue) Pop() (*RobotItem, error) {
 
 	el := q.queue.Front()
 	robotEl := el.Value.(RobotItem)
-	err := q.Dequeue(robotEl.robotId)
+	err := q.Dequeue(robotEl.robotID)
 	if err != nil {
 		return nil, fmt.Errorf("smth went horribly wrong :%s", err.Error())
 	}

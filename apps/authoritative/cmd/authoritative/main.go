@@ -17,7 +17,7 @@ func main() {
 
 	orm := matcher.CreateOrderRobotMatcher()
 
-	go orm.StartRobotMatcher()
+	go orm.StartORM()
 
 	s := grpc.NewServer()
 	// proto.RegisterHelloServiceServer(s, &server{})

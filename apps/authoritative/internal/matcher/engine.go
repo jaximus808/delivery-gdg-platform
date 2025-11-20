@@ -9,6 +9,11 @@ import (
 
 // matcher for orders and robots
 
+type OrderRobotMatch struct {
+	orderID int
+	robotID int
+}
+
 type OrderRobotMatcher struct {
 	orderIntake chan (*OrderItem)
 	robotIntake chan (*RobotUpdate)
@@ -27,12 +32,7 @@ func CreateOrderRobotMatcher() *OrderRobotMatcher {
 	}
 }
 
-func (orm *OrderRobotMatcher) publishMatch(orderItem *OrderItem, robotItem *RobotItem) error {
-	fmt.Printf("match made: r %d o %d", robotItem.robotId, orderItem.orderId)
-	return nil
-}
-
-func (orm *OrderRobotMatcher) attemptMatch() {
+func (orm *OrderRobotMatcher) attemptMatch(matchesChan chan (*OrderRobotMatch)) {
 	if orm.orderQueue.Len() > 0 && orm.robotQueue.Len() > 0 {
 		orderItem := orm.orderQueue.Pop()
 		robotItem, err := orm.robotQueue.Pop()
@@ -40,14 +40,24 @@ func (orm *OrderRobotMatcher) attemptMatch() {
 			fmt.Println(err.Error())
 		}
 
-		err = orm.publishMatch(orderItem, robotItem)
-		if err != nil {
-			fmt.Println(err.Error())
+		matchesChan <- &OrderRobotMatch{
+			orderID: orderItem.orderId,
+			robotID: robotItem.robotID,
 		}
+
 	}
 }
 
-func (orm *OrderRobotMatcher) StartRobotMatcher() {
+func (orm *OrderRobotMatcher) StartORM() {
+	matchesQueue := make(chan (*OrderRobotMatch), 10)
+	go orm.startEngine(matchesQueue)
+
+	for match := range matchesQueue {
+		fmt.Printf("match created between orderId: %d, robotID %d\n", match.orderID, match.robotID)
+	}
+}
+
+func (orm *OrderRobotMatcher) startEngine(matchesChan chan (*OrderRobotMatch)) {
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 
@@ -61,17 +71,17 @@ func (orm *OrderRobotMatcher) StartRobotMatcher() {
 			var err error
 			if robotUpdate.status == "online" {
 				err = orm.robotQueue.Enqueue(RobotItem{
-					robotId: robotUpdate.robotId,
+					robotID: robotUpdate.robotID,
 				})
 			} else {
-				err = orm.robotQueue.Dequeue(robotUpdate.robotId)
+				err = orm.robotQueue.Dequeue(robotUpdate.robotID)
 			}
 
 			if err != nil {
 				fmt.Println(err.Error())
 			}
 		case <-ticker.C:
-			orm.attemptMatch()
+			orm.attemptMatch(matchesChan)
 		}
 	}
 }
