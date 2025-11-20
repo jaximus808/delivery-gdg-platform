@@ -2,12 +2,11 @@ package db
 
 import (
 	"context"
+	"os"
 
 	"github.com/supabase-community/postgrest-go"
 
 	"github.com/joho/godotenv"
-
-	"os"
 )
 
 type Database struct {
@@ -93,6 +92,7 @@ func (db *Database) GetOrder(ctx context.Context, id int64) (Order, error) { ret
 func (db *Database) ListOrdersByUser(ctx context.Context, userID string) ([]Order, error) {
 	return nil, nil
 }
+
 func (db *Database) ListOrdersByVendor(ctx context.Context, vendorID string) ([]Order, error) {
 	return nil, nil
 }

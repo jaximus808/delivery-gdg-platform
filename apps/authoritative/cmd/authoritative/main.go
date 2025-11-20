@@ -9,6 +9,7 @@ import (
 	"net"
 	"os"
 
+	"github.com/jaximus808/delivery-gdg-platform/main/apps/authoritative/internal/matcher"
 	"strconv"
 
 	pb "github.com/jaximus808/delivery-gdg-platform/main/apps/authoritative/proto"
@@ -143,9 +144,14 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
+	orm := matcher.CreateOrderRobotMatcher()
 	grpc_server := grpc.NewServer()
 	pb.RegisterOrderHandlerServer(grpc_server, &server{sb: client})
 
+	go orm.StartORM()
+
+	s := grpc.NewServer()
+	// proto.RegisterHelloServiceServer(s, &server{})
 	log.Println("gRPC server listening on :50051")
 	if err := grpc_server.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
