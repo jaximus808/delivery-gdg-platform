@@ -1,0 +1,30 @@
+package robotmanager
+
+import (
+	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/jaximus808/delivery-gdg-platform/main/apps/authoritative/internal/events"
+)
+
+var robotManager string = "robot-manager"
+
+type RobotPublisher struct {
+	producer *kafka.Producer
+}
+
+func NewRobotPublisher(brokers string) (*RobotPublisher, error) {
+	producer, err := events.CreateKafkaProducer(brokers, robotManager)
+	if err != nil {
+		return nil, err
+	}
+
+	return &RobotPublisher{
+		producer: producer,
+	}, err
+}
+
+func (p *RobotPublisher) PublishRobotUpdate(value []byte) error {
+	return p.producer.Produce(&kafka.Message{
+		TopicPartition: kafka.TopicPartition{Topic: events.RobotUpdate, Partition: kafka.PartitionAny},
+		Value:          value,
+	}, nil)
+}
