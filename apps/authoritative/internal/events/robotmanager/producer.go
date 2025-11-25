@@ -28,3 +28,9 @@ func (p *RobotPublisher) PublishRobotUpdate(value []byte) error {
 		Value:          value,
 	}, nil)
 }
+
+func (kp *RobotPublisher) Close() {
+	// Wait for outstanding messages to be delivered
+	kp.producer.Flush(15 * 1000) // 15 seconds
+	kp.producer.Close()
+}
