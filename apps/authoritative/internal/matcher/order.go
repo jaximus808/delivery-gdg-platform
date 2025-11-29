@@ -3,9 +3,9 @@ package matcher
 import "container/heap"
 
 type OrderItem struct {
-	ownerId  int
-	orderId  int
-	orderNum int // this is the actual order number given for the day
+	ownerId  string //user id who placed order
+	orderId  int    //unique order id in DB
+	orderNum int    // this is the actual order number given for the day
 }
 
 type Item struct {
@@ -14,7 +14,7 @@ type Item struct {
 	Index    int
 }
 
-func CreateOrder(ownerId int, orderId int, orderNum int) *OrderItem {
+func CreateOrder(ownerId string, orderId int, orderNum int) *OrderItem {
 	return &OrderItem{
 		ownerId:  ownerId,
 		orderId:  orderId,
@@ -54,6 +54,7 @@ func (pq *OrderQueue) Pop() any {
 	old[n-1] = nil // avoid memory leak
 	item.Index = -1
 	*pq = old[0 : n-1]
+
 	return item
 }
 
@@ -64,6 +65,7 @@ type OrderPQ struct {
 func NewOrderPQ() *OrderPQ {
 	pq := &OrderPQ{h: make(OrderQueue, 0)}
 	heap.Init(&pq.h)
+
 	return pq
 }
 
@@ -76,6 +78,7 @@ func (pq *OrderPQ) Pop() *OrderItem {
 	if pq.Len() == 0 {
 		return nil
 	}
+
 	return heap.Pop(&pq.h).(*Item).Value.(*OrderItem)
 }
 
