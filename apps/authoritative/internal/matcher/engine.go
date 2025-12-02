@@ -32,10 +32,15 @@ func CreateOrderRobotMatcher(robotIntake chan *RobotUpdate) *OrderRobotMatcher {
 	}
 }
 
+func (orm *OrderRobotMatcher) SubmitOrder(o *OrderItem) {
+	orm.orderIntake <- o
+}
+
 func (orm *OrderRobotMatcher) attemptMatch(matchesChan chan (*OrderRobotMatch)) {
-	if orm.orderQueue.Len() > 0 && orm.robotQueue.Len() > 0 {
+	if orm.orderQueue.Len() > 0 && orm.robotQueue.Len() > 0 { // we have at least one order and one robot available
 		orderItem := orm.orderQueue.Pop()
 		robotItem, err := orm.robotQueue.Pop()
+
 		if err != nil {
 			fmt.Println(err.Error())
 		}
@@ -63,23 +68,26 @@ func (orm *OrderRobotMatcher) startEngine(matchesChan chan (*OrderRobotMatch)) {
 
 	for {
 		select {
-		case orderReq := <-orm.orderIntake:
+		case orderReq := <-orm.orderIntake: //get order request
 			orm.orderCount++
 			orderReq.UpdateOrderNum(int(orm.orderCount))
-			orm.orderQueue.Insert(orderReq)
+			orm.orderQueue.Insert(orderReq) //put in heap
+
 		case robotUpdate := <-orm.robotIntake:
 			var err error
-			if robotUpdate.status == "online" {
+
+			if robotUpdate.status == "online" { //add to queue
 				err = orm.robotQueue.Enqueue(RobotItem{
 					robotID: robotUpdate.robotID,
 				})
 			} else {
-				err = orm.robotQueue.Dequeue(robotUpdate.robotID)
+				err = orm.robotQueue.Dequeue(robotUpdate.robotID) //
 			}
 
 			if err != nil {
 				fmt.Println(err.Error())
 			}
+
 		case <-ticker.C:
 			orm.attemptMatch(matchesChan)
 		}

@@ -20,7 +20,8 @@ import (
 
 type server struct {
 	pb.UnimplementedOrderHandlerServer
-	sb *supabase.Client
+	sb  *supabase.Client
+	orm *matcher.OrderRobotMatcher
 }
 
 func (s *server) InsertOrder(ctx context.Context, req *pb.InsertOrderRequest) (*pb.InsertOrderResponse, error) {
@@ -34,6 +35,7 @@ func (s *server) InsertOrder(ctx context.Context, req *pb.InsertOrderRequest) (*
 		"dropOffLocation": order.GetDropoffLocId(),
 	}
 
+	//INSERT ORDER INTO "Orders" TABLE
 	inserted, _, err := s.sb.
 		From("orders").
 		Insert(orderData, false, "representation", "", "").
@@ -42,6 +44,7 @@ func (s *server) InsertOrder(ctx context.Context, req *pb.InsertOrderRequest) (*
 		return nil, fmt.Errorf("failed inserting order: %v", err)
 	}
 
+	//extract the order ID from the DB
 	var rows []struct {
 		OrderID int64 `json:"id"`
 	}
@@ -68,6 +71,10 @@ func (s *server) InsertOrder(ctx context.Context, req *pb.InsertOrderRequest) (*
 			return nil, fmt.Errorf("failed inserting order item: %v", err)
 		}
 	}
+
+	//insert into order queue to prepare for matching with robot
+	order_element := matcher.CreateOrder(order.GetUserId(), int(order.GetOrderId()), 0) //0 for now as it will get updated in engine.go
+	s.orm.SubmitOrder(order_element)
 
 	return &pb.InsertOrderResponse{
 		Order:     order,
@@ -104,20 +111,6 @@ func (s *server) DeleteOrder(ctx context.Context, req *pb.DeleteOrderRequest) (*
 	}, nil
 }
 
-/*
-func (s *server) InsertItem(ctx context.Context, req *pb.InsertItemRequest) (*pb.InsertItemResponse, error) {
-	fmt.Print("Received a food item to insert! \n")
-
-	item := req.GetItem()
-
-	return &pb.InsertItemResponse{
-		Item: item,
-		ReturnMsg: fmt.Sprintf("Received item %s from %d.",
-			item.ItemName, item.VendorId),
-	}, nil
-}
-*/
-
 func main() {
 	godotenv.Load("../../.env")
 
@@ -140,11 +133,15 @@ func main() {
 
 	orm := matcher.CreateOrderRobotMatcher()
 	grpc_server := grpc.NewServer()
-	pb.RegisterOrderHandlerServer(grpc_server, &server{sb: client})
+	pb.RegisterOrderHandlerServer(grpc_server, &server{
+		sb:  client,
+		orm: orm,
+	})
 
 	go orm.StartORM()
 
 	log.Println("gRPC server listening on :50051")
+
 	if err := grpc_server.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
