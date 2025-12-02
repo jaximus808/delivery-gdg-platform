@@ -22,10 +22,10 @@ type OrderRobotMatcher struct {
 	orderCount  int64
 }
 
-func CreateOrderRobotMatcher() *OrderRobotMatcher {
+func CreateOrderRobotMatcher(robotIntake chan *RobotUpdate) *OrderRobotMatcher {
 	return &OrderRobotMatcher{
 		orderIntake: make(chan (*OrderItem), 100),
-		robotIntake: make(chan (*RobotUpdate), 100), // this should be a robot update
+		robotIntake: robotIntake, // this should be a robot update
 		orderQueue:  NewOrderPQ(),
 		robotQueue:  NewRobotQueue(),
 		orderCount:  0,
