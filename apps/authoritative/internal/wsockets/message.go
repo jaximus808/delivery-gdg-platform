@@ -5,4 +5,12 @@ type Message struct {
 	Payload any    `json:"payload"`
 }
 
-type StatusMessage struct{}
+type RobotUpdate struct {
+	RobotID string `json:"robot_id"`
+	Status  string `json:"status"`
+}
+
+type RobotMatch struct {
+	RobotID string `json:"robot_id"`
+	OrderID int    `json:"order_id"`
+}

@@ -11,6 +11,7 @@ import (
 	"strconv"
 
 	"github.com/jaximus808/delivery-gdg-platform/main/apps/authoritative/internal/matcher"
+	"github.com/jaximus808/delivery-gdg-platform/main/apps/authoritative/internal/wsockets/robotmanager"
 	"github.com/joho/godotenv"
 	"github.com/supabase-community/supabase-go"
 	"google.golang.org/grpc"
@@ -35,7 +36,7 @@ func (s *server) InsertOrder(ctx context.Context, req *pb.InsertOrderRequest) (*
 		"dropOffLocation": order.GetDropoffLocId(),
 	}
 
-	//INSERT ORDER INTO "Orders" TABLE
+	// INSERT ORDER INTO "Orders" TABLE
 	inserted, _, err := s.sb.
 		From("orders").
 		Insert(orderData, false, "representation", "", "").
@@ -44,7 +45,7 @@ func (s *server) InsertOrder(ctx context.Context, req *pb.InsertOrderRequest) (*
 		return nil, fmt.Errorf("failed inserting order: %v", err)
 	}
 
-	//extract the order ID from the DB
+	// extract the order ID from the DB
 	var rows []struct {
 		OrderID int64 `json:"id"`
 	}
@@ -72,8 +73,8 @@ func (s *server) InsertOrder(ctx context.Context, req *pb.InsertOrderRequest) (*
 		}
 	}
 
-	//insert into order queue to prepare for matching with robot
-	order_element := matcher.CreateOrder(order.GetUserId(), int(order.GetOrderId()), 0) //0 for now as it will get updated in engine.go
+	// insert into order queue to prepare for matching with robot
+	order_element := matcher.CreateOrder(order.GetUserId(), int(order.GetOrderId()), 0) // 0 for now as it will get updated in engine.go
 	s.orm.SubmitOrder(order_element)
 
 	return &pb.InsertOrderResponse{
@@ -132,13 +133,14 @@ func main() {
 	}
 
 	orm := matcher.CreateOrderRobotMatcher()
+	match := orm.StartORM()
+
+	robotmanager.StartRobotManager(orm, match)
 	grpc_server := grpc.NewServer()
 	pb.RegisterOrderHandlerServer(grpc_server, &server{
 		sb:  client,
 		orm: orm,
 	})
-
-	go orm.StartORM()
 
 	log.Println("gRPC server listening on :50051")
 

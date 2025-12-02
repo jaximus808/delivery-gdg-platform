@@ -4,11 +4,12 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/jaximus808/delivery-gdg-platform/main/apps/authoritative/internal/matcher"
 	"github.com/jaximus808/delivery-gdg-platform/main/apps/authoritative/internal/wsockets"
 )
 
-func StartRobotManager() {
-	hub := wsockets.NewHub()
+func StartRobotManager(orm *matcher.OrderRobotMatcher, match chan (*matcher.OrderRobotMatch)) {
+	hub := wsockets.NewHub(orm, match)
 	go hub.Run()
 
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
