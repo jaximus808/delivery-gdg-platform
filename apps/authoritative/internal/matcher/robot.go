@@ -42,7 +42,7 @@ func (q *RobotQueue) Enqueue(r RobotItem) error {
 	_, exists := q.pos[r.robotID]
 
 	if exists {
-		return fmt.Errorf("robot Id already queued %d", r.robotID)
+		return fmt.Errorf("robot Id already queued %s", r.robotID)
 	}
 	el := q.queue.PushBack(r)
 	q.pos[r.robotID] = el
@@ -53,7 +53,7 @@ func (q *RobotQueue) Dequeue(rID string) error {
 	el := q.pos[rID]
 
 	if el == nil {
-		return fmt.Errorf("robot of Id %d does not exist", rID)
+		return fmt.Errorf("robot of Id %s does not exist", rID)
 	}
 
 	q.queue.Remove(el)

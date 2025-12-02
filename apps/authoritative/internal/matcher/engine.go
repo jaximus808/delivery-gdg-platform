@@ -53,7 +53,7 @@ func (orm *OrderRobotMatcher) attemptMatch(matchesChan chan (*OrderRobotMatch)) 
 			RobotID: robotItem.robotID,
 		}
 
-		fmt.Printf("match created between orderId: %d, robotID %d\n", orderItem.orderId, robotItem.robotID)
+		fmt.Printf("match created between orderId: %d, robotID %s\n", orderItem.orderId, robotItem.robotID)
 
 	}
 }

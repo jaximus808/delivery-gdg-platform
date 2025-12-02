@@ -14,5 +14,4 @@ func main() {
 
 	defer producer.Close()
 
-	robotmanager.NewRobotSubscriber(robotmanager.Brokers, "robot-manager")
 }

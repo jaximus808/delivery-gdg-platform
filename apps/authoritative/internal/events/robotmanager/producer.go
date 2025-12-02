@@ -1,7 +1,7 @@
 package robotmanager
 
 import (
-	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/jaximus808/delivery-gdg-platform/main/apps/authoritative/internal/events"
 )
 
@@ -24,7 +24,7 @@ func NewRobotPublisher(brokers string) (*RobotPublisher, error) {
 
 func (p *RobotPublisher) PublishRobotUpdate(value []byte) error {
 	return p.producer.Produce(&kafka.Message{
-		TopicPartition: kafka.TopicPartition{Topic: events.RobotUpdate, Partition: kafka.PartitionAny},
+		TopicPartition: kafka.TopicPartition{Topic: &events.RobotUpdate, Partition: kafka.PartitionAny},
 		Value:          value,
 	}, nil)
 }
