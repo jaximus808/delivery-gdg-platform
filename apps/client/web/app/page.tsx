@@ -15,9 +15,9 @@ export default function Home() {
               <span className="text-2xl font-bold">Delivery Robot</span>
             </div>
             <div className="flex items-center gap-4">
-              <a href="/" className="text-gray-700 font-medium">
+              <Link href="/" className="text-gray-700 font-medium">
                 Log In
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -127,7 +127,7 @@ export default function Home() {
               <img src='pin_clipart.png' alt="Pin" style={{ width: 64, height: 64, objectFit: "contain" }} />
             </div>
             <h3 className="text-xl font-semibold mb-2">Real-Time Tracking</h3>
-            <p className="text-gray-600">Follow your robot's journey to your door</p>
+            <p className="text-gray-600">Follow your robots journey to your door</p>
           </div>
         </div>
       </section>
