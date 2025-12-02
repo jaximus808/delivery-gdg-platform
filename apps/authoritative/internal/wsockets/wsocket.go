@@ -135,7 +135,7 @@ func (h *Hub) robotUpdate(c *Client, rUpdate *RobotUpdate) {
 			c.RobotID = rID
 			h.mu.RLock()
 			h.rClients[*rID] = c.ID
-			h.mu.Unlock()
+			h.mu.RUnlock()
 		} else if c.RobotID != rID {
 			fmt.Printf("Robot ID does not match up, expected: %s got: %s", *c.RobotID, *rID)
 			return
@@ -149,7 +149,7 @@ func (h *Hub) robotUpdate(c *Client, rUpdate *RobotUpdate) {
 		}
 		h.mu.RLock()
 		delete(h.rClients, *c.RobotID)
-		h.mu.Unlock()
+		h.mu.RUnlock()
 
 		ormRUpdate := matcher.NewRobotUpdate(status, *rID)
 		h.orm.SubmitRobot(ormRUpdate)
@@ -164,12 +164,13 @@ func (h *Hub) handleEvents(c *Client, msg *Message) {
 
 	switch msg.Type {
 	case "update":
-		var robotUpdate *RobotUpdate
-		err = json.Unmarshal(data, robotUpdate)
+		var robotUpdate RobotUpdate
+		err = json.Unmarshal(data, &robotUpdate)
 		if err != nil {
 			fmt.Print("error marshalling payload", err)
 		}
-		h.robotUpdate(c, robotUpdate)
+		h.robotUpdate(c, &robotUpdate)
+		fmt.Printf("Robot %s status updated to %s\n", robotUpdate.RobotID, robotUpdate.Status)
 	}
 }
 
@@ -188,14 +189,13 @@ func (c *Client) readPump() {
 			break
 		}
 		log.Printf("Received: %s", message)
-		var incomingMsg *Message
-
-		if err := json.Unmarshal(message, incomingMsg); err != nil {
+		var incomingMsg Message
+		if err := json.Unmarshal(message, &incomingMsg); err != nil {
 			log.Printf("Error unmarshalling JSON: %v", err)
 			// Optionally send an error message back to the client
 			continue
 		}
-		c.hub.handleEvents(c, incomingMsg)
+		c.hub.handleEvents(c, &incomingMsg)
 	}
 }
 
