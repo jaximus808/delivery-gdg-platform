@@ -8,22 +8,29 @@ import (
 
 type RobotUpdate struct {
 	status  string
-	robotID int
+	robotID string
+}
+
+func NewRobotUpdate(status string, robotID string) *RobotUpdate {
+	return &RobotUpdate{
+		status:  status,
+		robotID: robotID,
+	}
 }
 
 type RobotItem struct {
-	robotID int
+	robotID string
 }
 
 type RobotQueue struct {
 	queue *list.List
-	pos   map[int]*list.Element
+	pos   map[string]*list.Element
 }
 
 func NewRobotQueue() *RobotQueue {
 	return &RobotQueue{
 		queue: list.New(),
-		pos:   make(map[int]*list.Element),
+		pos:   make(map[string]*list.Element),
 	}
 }
 
@@ -42,7 +49,7 @@ func (q *RobotQueue) Enqueue(r RobotItem) error {
 	return nil
 }
 
-func (q *RobotQueue) Dequeue(rID int) error {
+func (q *RobotQueue) Dequeue(rID string) error {
 	el := q.pos[rID]
 
 	if el == nil {
