@@ -15,7 +15,7 @@ export default function Home() {
               <span className="text-2xl font-bold">Delivery Robot</span>
             </div>
             <div className="flex items-center gap-4">
-              <Link href="/test/LoginSignup" className="text-gray-700 font-medium">
+              <Link href="/login" className="text-gray-700 font-medium">
                 Log In
               </Link>
             </div>

@@ -1,48 +1,63 @@
 "use client"
+import { useRouter } from 'next/navigation'
 
 export default function Dashboard() {
+  const router = useRouter()
+  
   const vendors = [
     {
       name: "Subway",
       time: "10 min",
-      image: "/SubWay.avif"
+      image: "/SubWay.avif",
+      slug: "subway"
     },
     {
       name: "BeastCraft",
       time: "20 min",
-      image: "/BeastCraft.jpg"
+      image: "/BeastCraft.jpg",
+      slug: "beastcraft"
     },
     {
       name: "Fattened Caf",
       time: "10 min",
-      image: "/FattenedCaf.jpg"
+      image: "/FattenedCaf.jpg",
+      slug: "fattened-caf"
     },
     {
       name: "Collins Farms",
       time: "10 min",
-      image: "/CollinsFarm.png"
+      image: "/CollinsFarm.png",
+      slug: "collins-farms"
     },
     {
       name: "LaJoy's Coffee",
       time: "10 min",
-      image: "/LaJoys.jpg"
+      image: "/LaJoys.jpg",
+      slug: "lajoys-coffee"
     },
     {
       name: "CoffeeStamp",
       time: "10 min",
-      image: "/CoffeeStamp.jpg"
+      image: "/CoffeeStamp.jpg",
+      slug: "coffeestamp"
     },
     {
       name: "Cafe Bergson",
       time: "30 min",
-      image: "/CafeBergson.png"
+      image: "/CafeBergson.png",
+      slug: "cafe-bergson"
     },
     {
       name: "Corner 17",
       time: "10 min",
-      image: "/Corner17.jpg"
+      image: "/Corner17.jpg",
+      slug: "corner-17"
     }
   ]
+
+  const handleVendorClick = (slug: string) => {
+    router.push(`/dashboard/${slug}`)
+  }
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#E8D5FF' }}>
@@ -74,7 +89,8 @@ export default function Dashboard() {
           {vendors.map((vendor, index) => (
             <div
               key={index}
-              className="bg-white rounded-2xl overflow-hidden border border-purple-300 hover:shadow-xl transition-all cursor-pointer"
+              onClick={() => handleVendorClick(vendor.slug)}
+              className="bg-white rounded-2xl overflow-hidden border border-purple-300 hover:shadow-xl transition-all cursor-pointer transform hover:scale-105"
             >
               {/* Vendor Image */}
               <div className="w-full h-56 bg-gray-100 relative">
@@ -93,12 +109,18 @@ export default function Dashboard() {
                   }}
                 />
               </div>
-              
+
               {/* Vendor Info */}
               <div className="p-5 bg-white">
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">{vendor.name}</h3>
                 <p className="text-sm text-gray-600 mb-4">{vendor.time}</p>
-                <button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors">
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleVendorClick(vendor.slug)
+                  }}
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors"
+                >
                   Select
                 </button>
               </div>
@@ -109,4 +131,3 @@ export default function Dashboard() {
     </div>
   )
 }
-

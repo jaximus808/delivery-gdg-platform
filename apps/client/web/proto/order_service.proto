@@ -1,0 +1,54 @@
+// apps/authoritative: protoc --go_out=. --go-grpc_out=. proto/order_service.proto
+
+syntax = "proto3";
+
+package order_service;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "/proto;order_service";
+
+//----------SERVICE--------//
+service OrderHandler {
+    rpc InsertOrder(InsertOrderRequest) returns (InsertOrderResponse);
+    rpc DeleteOrder(DeleteOrderRequest) returns (DeleteOrderResponse);
+}
+
+//----------DATA----------//
+message Order {
+    int64 order_id = 1; 
+    string user_id = 2; //what user placed this order?
+    string vendor_id = 3; //who is this order for?
+    repeated OrderItem items = 4; //what items is in this order
+    string status = 5; //just created
+    google.protobuf.Timestamp created_at = 6; //when did this order get placed?
+    string dropoff_loc_id = 7;  //where does user want robot to drop off?
+    string robot_id = 8; //default = null until assigned a robot
+}
+
+message OrderItem {
+    int64 item_id = 1;
+    string item_name = 2;
+    int32 quantity = 3;
+    double price = 4;
+}
+
+//--------REQUESTS---------//
+message InsertOrderRequest {
+    Order order = 1;
+}
+
+message DeleteOrderRequest {
+    Order order= 1;
+}
+
+//---------RESPONSES----------
+message InsertOrderResponse {
+    Order order = 1;
+    string return_msg = 2; 
+}
+
+message DeleteOrderResponse {
+    string return_msg = 1;
+}
+

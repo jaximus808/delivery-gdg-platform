@@ -26,15 +26,35 @@ type server struct {
 }
 
 func (s *server) InsertOrder(ctx context.Context, req *pb.InsertOrderRequest) (*pb.InsertOrderResponse, error) {
+	fmt.Println("InsertOrder called")
 	order := req.GetOrder()
 
-	// ok time to insert order into database
+	// Print all incoming order data
+	fmt.Printf("Received Order:\n")
+	fmt.Printf("  - OrderId: %d\n", order.GetOrderId())
+	fmt.Printf("  - UserId: %s\n", order.GetUserId())
+	fmt.Printf("  - VendorId: %s\n", order.GetVendorId())
+	fmt.Printf("  - Status: %s\n", order.GetStatus())
+	fmt.Printf("  - DropoffLocId: %s\n", order.GetDropoffLocId())
+	fmt.Printf("  - RobotId: '%s' (length: %d)\n", order.GetRobotId(), len(order.GetRobotId()))
+	fmt.Printf("  - Items count: %d\n", len(order.GetItems()))
+
+	// Prepare base order data
 	orderData := map[string]interface{}{
 		"userId":          order.GetUserId(),
 		"vendorId":        order.GetVendorId(),
 		"status":          order.GetStatus(),
 		"dropOffLocation": order.GetDropoffLocId(),
 	}
+
+	// Only add robotId if it's not empty (protobuf default for string is "")
+	// Don't insert empty string into UUID column
+	if order.GetRobotId() != "" {
+		orderData["robotId"] = order.GetRobotId()
+	} else {
+		orderData["robotId"] = nil
+	}
+	// If robotId is empty, the database will use NULL as default
 
 	// INSERT ORDER INTO "Orders" TABLE
 	inserted, _, err := s.sb.
@@ -50,9 +70,16 @@ func (s *server) InsertOrder(ctx context.Context, req *pb.InsertOrderRequest) (*
 		OrderID int64 `json:"id"`
 	}
 
-	json.Unmarshal(inserted, &rows)
-	orderId := rows[0].OrderID
+	err = json.Unmarshal(inserted, &rows)
+	if err != nil {
+		return nil, fmt.Errorf("failed unmarshaling order response: %v", err)
+	}
 
+	if len(rows) == 0 {
+		return nil, fmt.Errorf("no order ID returned from database")
+	}
+
+	orderId := rows[0].OrderID
 	order.OrderId = orderId
 
 	// ok time to insert items in order into orderitems table
@@ -82,7 +109,6 @@ func (s *server) InsertOrder(ctx context.Context, req *pb.InsertOrderRequest) (*
 		ReturnMsg: "SUCCESS",
 	}, nil
 }
-
 func (s *server) DeleteOrder(ctx context.Context, req *pb.DeleteOrderRequest) (*pb.DeleteOrderResponse, error) {
 	order := req.GetOrder()
 	orderId := order.GetOrderId()
@@ -131,11 +157,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-
 	orm := matcher.CreateOrderRobotMatcher()
 	match := orm.StartORM()
 
-	robotmanager.StartRobotManager(orm, match)
+	log.Println("starting robot manager...")
+	go robotmanager.StartRobotManager(orm, match)
+
+	log.Println("robot manager started!")
 	grpc_server := grpc.NewServer()
 	pb.RegisterOrderHandlerServer(grpc_server, &server{
 		sb:  client,
