@@ -1,0 +1,11 @@
+# Canonicalize www → apex so Caddy provisions a cert for both and there is a
+# single public host.
+www.{$DOMAIN_NAME} {
+	redir https://{$DOMAIN_NAME}{uri} permanent
+}
+
+{$DOMAIN_NAME} {
+	# Web client (Next.js) — pages + /api/* route handlers. The Next server
+	# talks to the authoritative gRPC service over the internal compose network.
+	reverse_proxy web:3000
+}
