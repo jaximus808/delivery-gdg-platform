@@ -7,8 +7,10 @@
 # Debian-based golang image needs no extra apt packages — just a C toolchain,
 # which golang:*-bookworm already ships.
 #
-# Must track apps/authoritative/go.mod's `go` directive.
-FROM golang:1.25-bookworm AS builder
+# Floating minor tag on purpose: it always resolves to the latest patch release,
+# which is where Go stdlib security fixes land (govulncheck flags the stdlib
+# version baked into the image). Must be >= apps/authoritative/go.mod's `go` directive.
+FROM golang:1.26-bookworm AS builder
 WORKDIR /src
 
 COPY go.mod go.sum ./

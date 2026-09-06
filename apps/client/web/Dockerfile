@@ -5,7 +5,7 @@
 #
 # NEXT_PUBLIC_* vars are inlined into the client bundle at BUILD time, so
 # NEXT_PUBLIC_SUPABASE_URL must be passed as a build arg (docker-compose does).
-# Server-only secrets (SUPABASE_SERVICE_ROLE_KEY, JWT_SECRET, GRPC_SERVER_URL)
+# Server-only secrets (SUPABASE_SECRET_KEY, JWT_SECRET, GRPC_SERVER_URL)
 # are read at runtime and must NOT be baked in.
 FROM node:22-alpine AS deps
 WORKDIR /app

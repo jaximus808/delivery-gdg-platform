@@ -42,8 +42,10 @@ services:
     volumes:
       - kafka-data:/var/lib/kafka/data
     healthcheck:
+      # Each probe spawns a full JVM (~90 MB, ~1 s of CPU). At 10s this alone
+      # kept the prod VM at ~17% CPU, so probe once a minute after start_period.
       test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9093 >/dev/null 2>&1"]
-      interval: 10s
+      interval: 60s
       timeout: 10s
       retries: 12
       start_period: 20s
@@ -78,7 +80,7 @@ services:
       - "8080:8080"     # robot WebSocket hub (/ws)
     environment:
       SUPABASE_URL: ${SUPABASE_URL:?set SUPABASE_URL in deployments/.env}
-      SUPABASE_KEY: ${SUPABASE_KEY:?set SUPABASE_KEY in deployments/.env}
+      SUPABASE_SECRET_KEY: ${SUPABASE_SECRET_KEY:?set SUPABASE_SECRET_KEY in deployments/.env}
       KAFKA_BROKERS: kafka:9093
 
   command:
@@ -105,7 +107,7 @@ services:
       - "3000:3000"
     environment:
       NEXT_PUBLIC_SUPABASE_URL: ${SUPABASE_URL}
-      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:?set SUPABASE_SERVICE_ROLE_KEY in deployments/.env}
+      SUPABASE_SECRET_KEY: ${SUPABASE_SECRET_KEY:?set SUPABASE_SECRET_KEY in deployments/.env}
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in deployments/.env}
       GRPC_SERVER_URL: authoritative:50051
     healthcheck:
