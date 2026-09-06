@@ -4,7 +4,7 @@ import { jwtVerify } from 'jose';
 import { getJwtSecretKey } from '@/lib/jwt-secret';
 
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const token = request.cookies.get('auth-token')?.value;
 
   // Protected routes
