@@ -25,7 +25,7 @@ name: Deploy to GCP Compute Engine
 #       GCP_PROJECT, GCP_ZONE, GCP_VM_NAME, GCP_SA_EMAIL, WIF_PROVIDER
 #         (WIF_PROVIDER looks like
 #          projects/123456/locations/global/workloadIdentityPools/github/providers/github)
-#       SUPABASE_URL, SUPABASE_KEY, SUPABASE_SERVICE_ROLE_KEY, JWT_SECRET, DOMAIN_NAME
+#       SUPABASE_URL, SUPABASE_SECRET_KEY, JWT_SECRET, DOMAIN_NAME
 
 on:
   push:
@@ -42,8 +42,49 @@ env:
   DEPLOY_DIR: /opt/delivery-gdg
 
 jobs:
+  # Gate: refuse to ship a dependency with a known critical vulnerability.
+  # Added after the 2026-09-04 incident, where Next.js 15.5.3 (public RCE,
+  # GHSA-9qr9-h5gf-34mp) was deployed and the web container was compromised
+  # within two hours. Fails the run before anything is copied to the VM.
+  check:
+    name: Dependency vulnerability check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/client/web/package-lock.json
+
+      - name: npm audit (web, production deps, critical)
+        working-directory: apps/client/web
+        run: |
+          npm ci --no-audit --no-fund
+          npm audit --omit=dev --audit-level=critical
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+          cache-dependency-path: |
+            apps/authoritative/go.sum
+            apps/command/go.sum
+
+      - name: govulncheck (authoritative)
+        working-directory: apps/authoritative
+        run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+
+      - name: govulncheck (command)
+        working-directory: apps/command
+        run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+
   deploy:
     name: Build and Deploy
+    needs: check
     runs-on: ubuntu-latest
     environment: prod
 
@@ -61,12 +102,11 @@ jobs:
       - name: Inject secrets to deployments/.env
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
         run: |
-          for v in SUPABASE_URL SUPABASE_KEY SUPABASE_SERVICE_ROLE_KEY JWT_SECRET DOMAIN_NAME; do
+          for v in SUPABASE_URL SUPABASE_SECRET_KEY JWT_SECRET DOMAIN_NAME; do
             if [ -z "${!v}" ]; then
               echo "::error::secret $v is not set in the 'prod' environment"
               exit 1
@@ -74,8 +114,7 @@ jobs:
           done
           cat <<EOT > deployments/.env
           SUPABASE_URL=$SUPABASE_URL
-          SUPABASE_KEY=$SUPABASE_KEY
-          SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY
+          SUPABASE_SECRET_KEY=$SUPABASE_SECRET_KEY
           JWT_SECRET=$JWT_SECRET
           DOMAIN_NAME=$DOMAIN_NAME
           EOT
